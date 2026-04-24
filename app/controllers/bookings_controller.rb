@@ -3,15 +3,13 @@ class BookingsController < ApplicationController
   before_action :set_property, only: [:create]
 
   def index
-    # Busca todas las reservas del usuario actual y las ordena de la más nueva a la más antigua
     @bookings = current_user.bookings.order(start_date: :desc)
   end
-  
+
   def create
     @booking = @property.bookings.new(booking_params)
     @booking.user = current_user
 
-    # Calcular los días de estadía y el precio total
     dias = (@booking.end_date - @booking.start_date).to_i
     @booking.total_price = dias * @property.price
 

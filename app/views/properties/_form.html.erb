@@ -52,36 +52,30 @@
       var mapElement = document.getElementById('form-map');
       if (!mapElement || mapElement._leaflet_id) return;
 
-      // 1. Coordenadas por defecto (Santiago por defecto, o la ubicación de la casa si la estás editando)
       var defaultLat = document.getElementById('property_latitude').value || -33.4489; 
       var defaultLng = document.getElementById('property_longitude').value || -70.6693;
       var zoomLevel = document.getElementById('property_latitude').value ? 16 : 10;
 
-      // 2. Inicializar el mapa
       var map = L.map('form-map').setView([defaultLat, defaultLng], zoomLevel);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap'
       }).addTo(map);
 
-      // 3. Crear el pin arrastrable
       var marker = L.marker([defaultLat, defaultLng], {
         draggable: true
       }).addTo(map);
 
-      // 4. MAGIA 1: Cuando sueltas el pin, guardamos las coordenadas en los campos ocultos
       marker.on('dragend', function(e) {
         var position = marker.getLatLng();
         document.getElementById('property_latitude').value = position.lat;
         document.getElementById('property_longitude').value = position.lng;
       });
 
-      // 5. MAGIA 2: Cuando haces clic en "Buscar en Mapa"
       document.getElementById('search-btn').addEventListener('click', function(e) {
         e.preventDefault();
         var query = document.getElementById('property_location').value;
         if (!query) return;
 
-        // Preguntarle al satélite
         fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}`)
           .then(response => response.json())
           .then(data => {
@@ -102,7 +96,6 @@
           });
       });
       
-      // Permitir buscar presionando la tecla "Enter"
       document.getElementById('property_location').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
           e.preventDefault(); 

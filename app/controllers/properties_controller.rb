@@ -6,10 +6,8 @@ class PropertiesController < ApplicationController
   # GET /properties or /properties.json
 def index
     if params[:location].present?
-      # Si el usuario escribió algo en el buscador, filtramos usando PostgreSQL
       @properties = Property.where("location ILIKE ?", "%#{params[:location]}%")
     else
-      # Si no hay búsqueda, mostramos todas las propiedades
       @properties = Property.all
     end
   end
@@ -67,7 +65,6 @@ def index
   end
 
   def mis_propiedades
-    # Busca solo las propiedades del usuario actual, de la más nueva a la más antigua
     @properties = current_user.properties.order(created_at: :desc)
   end
 

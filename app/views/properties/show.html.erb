@@ -41,7 +41,6 @@
       var mapElement = document.getElementById('map');
       if (!mapElement || mapElement._leaflet_id) return; 
 
-      // Si la propiedad tiene coordenadas exactas, las usamos. Si no, mostramos un error amable.
       var lat = <%= @property.latitude || 'null' %>;
       var lon = <%= @property.longitude || 'null' %>;
 
@@ -52,7 +51,6 @@
           attribution: '© OpenStreetMap'
         }).addTo(map);
 
-        // Ponemos el pin exacto, pero le quitamos el "draggable" porque aquí solo es para mirar
         L.marker([lat, lon]).addTo(map)
           .bindPopup("<b><%= j @property.title %></b><br>Ubicación exacta")
           .openPopup();
