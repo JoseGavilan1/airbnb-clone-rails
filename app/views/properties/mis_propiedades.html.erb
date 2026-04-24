@@ -1,0 +1,65 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <h1 class="text-3xl font-bold text-gray-900 mb-8">Panel de Anfitrión</h1>
+
+  <% if @properties.empty? %>
+    <div class="bg-gray-50 rounded-xl p-12 text-center border border-gray-200">
+      <p class="text-lg text-gray-600 mb-4">Aún no has publicado ninguna propiedad.</p>
+      <%= link_to "Publicar mi primera propiedad", new_property_path, class: "text-blue-600 font-medium hover:underline" %>
+    </div>
+  <% else %>
+    <div class="space-y-8">
+      <% @properties.each do |property| %>
+        <div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition">
+          <div class="flex flex-col md:flex-row">
+            
+            <div class="md:w-1/3 bg-gray-200 h-64 md:h-auto">
+              <% if property.photo.attached? %>
+                <%= image_tag property.photo, class: "w-full h-full object-cover" %>
+              <% end %>
+            </div>
+            
+            <div class="p-6 md:w-2/3 flex flex-col">
+              <div class="flex justify-between items-start mb-2">
+                <div>
+                  <h2 class="text-2xl font-bold text-gray-900"><%= property.title %></h2>
+                  <p class="text-gray-500"><%= property.location %> • $<%= property.price %>/noche</p>
+                </div>
+                <div class="flex gap-3">
+                  <%= link_to "Ver pública", property_path(property), class: "text-sm text-gray-600 hover:text-blue-600 font-medium" %>
+                  <%= link_to "Editar", edit_property_path(property), class: "text-sm text-blue-600 hover:text-blue-800 font-medium" %>
+                </div>
+              </div>
+
+              <div class="mt-auto pt-6 border-t border-gray-100">
+                <h3 class="font-bold text-gray-900 mb-4 flex items-center justify-between">
+                  <span>Reservas de huéspedes</span>
+                  <span class="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full"><%= property.bookings.count %> totales</span>
+                </h3>
+                
+                <% if property.bookings.empty? %>
+                  <p class="text-sm text-gray-500 italic bg-gray-50 p-4 rounded-lg border border-gray-100">Aún no hay reservas para esta propiedad. ¡Pronto llegarán!</p>
+                <% else %>
+                  <div class="space-y-3 max-h-48 overflow-y-auto pr-2">
+                    <% property.bookings.order(start_date: :desc).each do |booking| %>
+                      <div class="bg-gray-50 p-4 rounded-lg flex justify-between items-center text-sm border border-gray-200">
+                        <div>
+                          <p class="font-medium text-gray-900">Huésped: <%= booking.user.email %></p>
+                          <p class="text-gray-500 mt-1">Fechas: <span class="font-medium"><%= booking.start_date.strftime("%d/%m/%Y") %></span> al <span class="font-medium"><%= booking.end_date.strftime("%d/%m/%Y") %></span></p>
+                        </div>
+                        <div class="text-right">
+                          <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Ganancia</p>
+                          <p class="font-bold text-green-600 text-lg">$<%= booking.total_price %></p>
+                        </div>
+                      </div>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

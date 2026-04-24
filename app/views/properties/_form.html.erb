@@ -1,0 +1,123 @@
+<%= form_with(model: property, class: "contents") do |form| %>
+  <% if property.errors.any? %>
+    <div id="error_explanation" class="bg-red-50 text-red-500 px-3 py-2 font-medium rounded-md mt-3">
+      <h2><%= pluralize(property.errors.count, "error") %> prohibited this property from being saved:</h2>
+
+      <ul class="list-disc ml-6">
+        <% property.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="my-5">
+    <%= form.label :title %>
+    <%= form.text_field :title, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": property.errors[:title].none?, "border-red-400 focus:outline-red-600": property.errors[:title].any?}] %>
+  </div>
+
+  <div class="my-5">
+    <%= form.label :photo, "Foto de la propiedad" %>
+    <%= form.file_field :photo, class: "block w-full mt-2" %>
+  </div>
+
+  <div class="my-5">
+    <%= form.label :description %>
+    <%= form.textarea :description, rows: 4, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": property.errors[:description].none?, "border-red-400 focus:outline-red-600": property.errors[:description].any?}] %>
+  </div>
+
+  <div class="my-5">
+    <%= form.label :price %>
+    <%= form.number_field :price, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": property.errors[:price].none?, "border-red-400 focus:outline-red-600": property.errors[:price].any?}] %>
+  </div>
+
+  <div class="mb-6">
+    <%= form.label :location, "Ubicación (Escribe una dirección y haz clic en Buscar)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+    
+    <div class="flex gap-2 mb-2">
+      <%= form.text_field :location, id: "property_location", class: "flex-1 rounded-lg border-gray-300 py-2 px-3 focus:ring-blue-500 focus:border-blue-500", placeholder: "Ej: Avenida O'Higgins, Curacaví" %>
+      <button type="button" id="search-btn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition font-medium cursor-pointer">Buscar en Mapa</button>
+    </div>
+
+    <p class="text-xs text-gray-500 mb-3">📍 Puedes arrastrar el pin rojo para seleccionar el lugar exacto de la casa.</p>
+    
+    <div id="form-map" class="w-full h-80 bg-gray-100 rounded-xl border border-gray-300 z-0 relative"></div>
+
+    <%= form.hidden_field :latitude, id: "property_latitude" %>
+    <%= form.hidden_field :longitude, id: "property_longitude" %>
+  </div>
+
+  <script>
+    document.addEventListener("turbo:load", function() {
+      var mapElement = document.getElementById('form-map');
+      if (!mapElement || mapElement._leaflet_id) return;
+
+      // 1. Coordenadas por defecto (Santiago por defecto, o la ubicación de la casa si la estás editando)
+      var defaultLat = document.getElementById('property_latitude').value || -33.4489; 
+      var defaultLng = document.getElementById('property_longitude').value || -70.6693;
+      var zoomLevel = document.getElementById('property_latitude').value ? 16 : 10;
+
+      // 2. Inicializar el mapa
+      var map = L.map('form-map').setView([defaultLat, defaultLng], zoomLevel);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+      }).addTo(map);
+
+      // 3. Crear el pin arrastrable
+      var marker = L.marker([defaultLat, defaultLng], {
+        draggable: true
+      }).addTo(map);
+
+      // 4. MAGIA 1: Cuando sueltas el pin, guardamos las coordenadas en los campos ocultos
+      marker.on('dragend', function(e) {
+        var position = marker.getLatLng();
+        document.getElementById('property_latitude').value = position.lat;
+        document.getElementById('property_longitude').value = position.lng;
+      });
+
+      // 5. MAGIA 2: Cuando haces clic en "Buscar en Mapa"
+      document.getElementById('search-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        var query = document.getElementById('property_location').value;
+        if (!query) return;
+
+        // Preguntarle al satélite
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.length > 0) {
+              var lat = data[0].lat;
+              var lon = data[0].lon;
+              
+              // Mover el mapa y el pin
+              map.setView([lat, lon], 16);
+              marker.setLatLng([lat, lon]);
+              
+              // Guardar coordenadas
+              document.getElementById('property_latitude').value = lat;
+              document.getElementById('property_longitude').value = lon;
+            } else {
+              alert("El mapa no encontró esa dirección. Intenta ser más específico o mueve el pin con el ratón.");
+            }
+          });
+      });
+      
+      // Permitir buscar presionando la tecla "Enter"
+      document.getElementById('property_location').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault(); 
+          document.getElementById('search-btn').click();
+        }
+      });
+    });
+  </script>
+
+  <div class="my-5">
+    <%= form.label :bedrooms %>
+    <%= form.number_field :bedrooms, class: ["block shadow-sm rounded-md border px-3 py-2 mt-2 w-full", {"border-gray-400 focus:outline-blue-600": property.errors[:bedrooms].none?, "border-red-400 focus:outline-red-600": property.errors[:bedrooms].any?}] %>
+  </div>
+
+  <div class="inline">
+    <%= form.submit class: "w-full sm:w-auto rounded-md px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white inline-block font-medium cursor-pointer" %>
+  </div>
+<% end %>

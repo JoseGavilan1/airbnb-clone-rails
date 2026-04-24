@@ -1,0 +1,103 @@
+<% content_for :title, "Showing property" %>
+
+<div class="md:w-2/3 w-full">
+  <% if notice.present? %>
+    <p class="py-2 px-3 bg-green-50 mb-5 text-green-500 font-medium rounded-md inline-block" id="notice"><%= notice %></p>
+  <% end %>
+
+  <h1 class="font-bold text-4xl">Showing property</h1>
+
+  <%= render @property %>
+
+  <%= link_to "Edit this property", edit_property_path(@property), class: "w-full sm:w-auto text-center rounded-md px-3.5 py-2.5 bg-gray-100 hover:bg-gray-50 inline-block font-medium" %>
+  <%= link_to "Back to properties", properties_path, class: "w-full sm:w-auto text-center mt-2 sm:mt-0 sm:ml-2 rounded-md px-3.5 py-2.5 bg-gray-100 hover:bg-gray-50 inline-block font-medium" %>
+  <div class="mt-8 bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+    <h3 class="text-xl font-bold text-gray-900 mb-2">Haz tu reserva</h3>
+    <p class="text-gray-600 mb-6">Precio: <span class="font-bold text-gray-900">$<%= @property.price %></span> / noche</p>
+
+    <%= form_with model: [@property, Booking.new], class: "flex flex-col gap-4" do |f| %>
+      <div class="flex flex-col sm:flex-row gap-4">
+        <div class="flex-1">
+          <%= f.label :start_date, "Llegada", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.date_field :start_date, class: "mt-1 block w-full rounded-lg border-gray-300 py-2 px-3 focus:ring-blue-500 focus:border-blue-500", required: true %>
+        </div>
+        <div class="flex-1">
+          <%= f.label :end_date, "Salida", class: "block text-sm font-medium text-gray-700" %>
+          <%= f.date_field :end_date, class: "mt-1 block w-full rounded-lg border-gray-300 py-2 px-3 focus:ring-blue-500 focus:border-blue-500", required: true %>
+        </div>
+      </div>
+      <%= f.submit "Reservar ahora", class: "w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 cursor-pointer transition mt-2" %>
+    <% end %>
+  </div>
+  <div class="mt-12 pt-8 border-t border-gray-200">
+    <h3 class="text-2xl font-bold text-gray-900 mb-6">A dónde irás</h3>
+    
+    <div id="map" class="w-full h-96 bg-gray-200 rounded-xl shadow-inner z-0 relative"></div>
+    <p class="text-gray-500 mt-2 text-sm">📍 Ubicación aproximada: <span class="font-medium"><%= @property.location %></span></p>
+  </div>
+
+  <script>
+    document.addEventListener("turbo:load", function() {
+      var mapElement = document.getElementById('map');
+      if (!mapElement || mapElement._leaflet_id) return; 
+
+      // Si la propiedad tiene coordenadas exactas, las usamos. Si no, mostramos un error amable.
+      var lat = <%= @property.latitude || 'null' %>;
+      var lon = <%= @property.longitude || 'null' %>;
+
+      if (lat && lon) {
+        var map = L.map('map').setView([lat, lon], 15);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // Ponemos el pin exacto, pero le quitamos el "draggable" porque aquí solo es para mirar
+        L.marker([lat, lon]).addTo(map)
+          .bindPopup("<b><%= j @property.title %></b><br>Ubicación exacta")
+          .openPopup();
+      } else {
+        mapElement.innerHTML = "<div class='flex items-center justify-center h-full'><p class='text-gray-500 font-medium'>El anfitrión aún no ha fijado las coordenadas exactas de este lugar.</p></div>";
+      }
+    });
+  </script>
+  <div class="mt-12 pt-8 border-t border-gray-200">
+    <h3 class="text-2xl font-bold text-gray-900 mb-6">Reseñas de los huéspedes</h3>
+
+    <% if @property.reviews.any? %>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <% @property.reviews.order(created_at: :desc).each do |review| %>
+          <div class="bg-gray-50 p-5 rounded-xl border border-gray-100">
+            <div class="flex items-center mb-2">
+              <span class="font-bold text-gray-900 mr-2"><%= review.user.email.split('@').first.capitalize %></span>
+              <span class="text-yellow-500 font-bold">★ <%= review.rating %></span>
+            </div>
+            <p class="text-gray-600"><%= review.comment %></p>
+            <p class="text-xs text-gray-400 mt-2"><%= time_ago_in_words(review.created_at) %> atrás</p>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="text-gray-500 italic mb-8">Aún no hay reseñas para este alojamiento. ¡Sé el primero en calificar!</p>
+    <% end %>
+
+    <% if user_signed_in? %>
+      <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm max-w-2xl">
+        <h4 class="font-bold text-lg mb-4">Deja tu calificación</h4>
+        
+        <%= form_with model: [@property, Review.new], class: "space-y-4" do |f| %>
+          <div>
+            <%= f.label :rating, "Estrellas (1 al 5)", class: "block text-sm font-medium text-gray-700" %>
+            <%= f.number_field :rating, in: 1..5, class: "mt-1 block w-32 rounded-lg border-gray-300 py-2 px-3 focus:ring-blue-500 focus:border-blue-500", required: true %>
+          </div>
+          <div>
+            <%= f.label :comment, "Tu experiencia", class: "block text-sm font-medium text-gray-700" %>
+            <%= f.text_area :comment, rows: 3, class: "mt-1 block w-full rounded-lg border-gray-300 py-2 px-3 focus:ring-blue-500 focus:border-blue-500", required: true, placeholder: "¿Cómo estuvo tu estadía?" %>
+          </div>
+          <%= f.submit "Publicar Reseña", class: "bg-gray-900 text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-800 cursor-pointer transition" %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+  <%= button_to "Destroy this property", @property, method: :delete, form_class: "sm:inline-block mt-2 sm:mt-0 sm:ml-2", class: "w-full rounded-md px-3.5 py-2.5 text-white bg-red-600 hover:bg-red-500 font-medium cursor-pointer", data: { turbo_confirm: "Are you sure?" } %>
+</div>

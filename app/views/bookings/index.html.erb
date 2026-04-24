@@ -1,0 +1,42 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <h1 class="text-3xl font-bold text-gray-900 mb-8">Mis Viajes</h1>
+
+  <% if @bookings.empty? %>
+    <div class="bg-gray-50 rounded-xl p-12 text-center border border-gray-200">
+      <p class="text-lg text-gray-600 mb-4">Aún no tienes ningún viaje reservado.</p>
+      <%= link_to "Explorar alojamientos", root_path, class: "text-blue-600 font-medium hover:underline" %>
+    </div>
+  <% else %>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <% @bookings.each do |booking| %>
+        <div class="border border-gray-200 rounded-xl overflow-hidden shadow-sm flex flex-col hover:shadow-md transition">
+          <div class="h-48 bg-gray-200">
+            <% if booking.property.photo.attached? %>
+              <%= image_tag booking.property.photo, class: "w-full h-full object-cover" %>
+            <% end %>
+          </div>
+
+          <div class="p-5 flex flex-col flex-grow">
+            <h3 class="font-bold text-lg text-gray-900 mb-1"><%= booking.property.location %></h3>
+            <p class="text-gray-500 text-sm mb-4 truncate"><%= booking.property.title %></p>
+
+            <div class="mt-auto bg-gray-50 p-4 rounded-lg border border-gray-100">
+              <div class="flex justify-between items-center text-sm mb-2">
+                <span class="text-gray-500">Llegada:</span>
+                <span class="font-medium text-gray-900"><%= booking.start_date.strftime("%d/%m/%Y") %></span>
+              </div>
+              <div class="flex justify-between items-center text-sm mb-2">
+                <span class="text-gray-500">Salida:</span>
+                <span class="font-medium text-gray-900"><%= booking.end_date.strftime("%d/%m/%Y") %></span>
+              </div>
+              <div class="flex justify-between items-center mt-3 pt-3 border-t border-gray-200">
+                <span class="font-bold text-gray-900">Total pagado:</span>
+                <span class="font-bold text-blue-600">$<%= booking.total_price %></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>
